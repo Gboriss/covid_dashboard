@@ -1,32 +1,69 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
-  </div>
+<div id="app" class="container">
+	<div class="row mt-5" v-if="arrPositive.length > 0">
+		<div class="col">
+			<h2>Positive</h2>
+			<LineChart 
+				:chartData="arrPositive"
+				:options="chartOptions"	
+			/>
+		</div>
+	</div>
+</div>
 </template>
 
+<script>
+import axios from 'axios'
+import moment from 'moment'
+import LineChart from '@/components/LineChart.vue'
+
+export default {
+	name: 'app',
+	components: {
+		LineChart
+	},
+	data() {
+		return {
+			arrPositive: [],
+			arrHospitalized: [],
+			arrInIcu: [],
+			arrOnventilators: [],
+			arrRecovered: [],
+			arrDeaths: [],
+			chartOptions: {
+				responsive: true,
+				maintainAspectRatio: false
+			}
+		}
+	},
+	async created() {
+		const { data } = await axios.get('https://covidtracking.com/api/us/daily')
+		console.log(data)
+		data.forEach(d => {
+			const date = moment(d.date, 'YYYYMMDD').format('DD/MM')
+
+			const {
+				positive,
+				hospitalizedCurrently,
+				inIcuCurrently,
+				onVentilatorCurrently,
+				recovered,
+				death
+			} = d
+
+			this.arrPositive.push({date, total: positive})
+			this.arrHospitalized.push({date, total: hospitalizedCurrently})
+			this.arrInIcu.push({date, total: inIcuCurrently})
+			this.arrOnventilators.push({date, total: onVentilatorCurrently})
+			this.arrRecovered.push({date, total: recovered})
+			this.arrDeaths.push({date, total: death})
+
+			// console.log(this.arrPositive)
+		})
+	}
+}
+</script>
+
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
-}
 </style>
